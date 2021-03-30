@@ -8,6 +8,7 @@ import itertools
 
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.metrics import make_scorer
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import shuffle
 from scipy.special import binom
 
@@ -139,6 +140,9 @@ class ExhaustiveClassification:
         # For ROC AUC and SVM we should pass probability=True argument
         if "ROC_AUC" in self.scoring_functions and self.classifier == SVC:
             self.classifier_kwargs["probability"] = True
+
+        if self.classifier != KNeighborsClassifier:
+            self.classifier_kwargs["random_state"] = self.random_state
 
     @property
     def pre_selected_features(self):
@@ -327,7 +331,7 @@ class ExhaustiveClassification:
             preprocessor = None
 
         # Fit classifier with CV search of unknown parameters
-        classifier = self.classifier(random_state=self.random_state, **self.classifier_kwargs)
+        classifier = self.classifier(**self.classifier_kwargs)
 
         splitter = StratifiedKFold(
                 n_splits=self.classifier_CV_folds, 
@@ -353,7 +357,7 @@ class ExhaustiveClassification:
         best_params = {param: all_params[best_ind][param] for param in all_params[best_ind]}
 
         # Refit classifier with best parameters
-        classifier = self.classifier(random_state=self.random_state, **self.classifier_kwargs, **best_params)
+        classifier = self.classifier(**self.classifier_kwargs, **best_params)
         classifier.fit(X_train, y_train)
 
         return classifier, best_params, preprocessor
