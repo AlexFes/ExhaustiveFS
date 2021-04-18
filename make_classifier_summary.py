@@ -50,7 +50,12 @@ if __name__ == "__main__":
 
     # Generate report and roc_auc pdfs
     report = []
-    report.append("Accuracy metrics:")
+    report.append("Best params:")
+    report.append("//--------------------------------------------")
+    for param, value in best_params.items():
+        report.append("{} = {}".format(param, value))
+
+    report.append("\nAccuracy metrics:")
     report.append("//--------------------------------------------")
     for i, dataset in enumerate(scores):
         dataset_type = ann.loc[ann["Dataset"] == dataset].loc[:, "Dataset type"].values[0].lower()
