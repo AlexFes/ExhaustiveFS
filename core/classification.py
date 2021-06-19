@@ -16,6 +16,7 @@ from scipy.special import binom
 # since SVM requires special care in this case
 from sklearn.svm import SVC
 
+import imblearn
 
 class ExhaustiveClassification:
     def __init__(
@@ -28,7 +29,8 @@ class ExhaustiveClassification:
         limit_feature_subsets, n_feature_subsets, shuffle_feature_subsets,
         max_n, max_estimated_time,
         scoring_functions, main_scoring_function, main_scoring_threshold,
-        n_processes=1, random_state=None, verbose=True
+        n_processes=1, random_state=None, verbose=True,
+        sampling=None
     ):
         """Class constructor
         
@@ -143,6 +145,8 @@ class ExhaustiveClassification:
 
         if self.classifier != KNeighborsClassifier:
             self.classifier_kwargs["random_state"] = self.random_state
+
+        self.sampling = sampling
 
     @property
     def pre_selected_features(self):
@@ -321,6 +325,19 @@ class ExhaustiveClassification:
         # Extract training set
         X_train = self.df.loc[self.ann["Dataset type"] == "Training", features_subset].to_numpy()
         y_train = self.ann.loc[self.ann["Dataset type"] == "Training", "Class"].to_numpy()
+
+        if self.sampling == "SMOTE":
+            X_train, y_train = imblearn.over_sampling\
+                .SMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+        elif self.sampling == "BorderlineSMOTE":
+            X_train, y_train = imblearn.over_sampling\
+                .BorderlineSMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+        elif self.sampling == "SVMSMOTE":
+            X_train, y_train = imblearn.over_sampling\
+                .SVMSMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+        elif self.sampling == "KMeansSMOTE":
+            X_train, y_train = imblearn.over_sampling\
+                .KMeansSMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
 
         # Fit preprocessor and transform training set
         if self.preprocessor:
