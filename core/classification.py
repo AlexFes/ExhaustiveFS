@@ -30,7 +30,7 @@ class ExhaustiveClassification:
         max_n, max_estimated_time,
         scoring_functions, main_scoring_function, main_scoring_threshold,
         n_processes=1, random_state=None, verbose=True,
-        sampling=None
+        sampling=None, sampling_strategy = 1
     ):
         """Class constructor
         
@@ -147,6 +147,7 @@ class ExhaustiveClassification:
             self.classifier_kwargs["random_state"] = self.random_state
 
         self.sampling = sampling
+        self.sampling_strategy = sampling_strategy
 
     @property
     def pre_selected_features(self):
@@ -328,16 +329,16 @@ class ExhaustiveClassification:
 
         if self.sampling == "SMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .SMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+                .SMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
         elif self.sampling == "BorderlineSMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .BorderlineSMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+                .BorderlineSMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
         elif self.sampling == "SVMSMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .SVMSMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+                .SVMSMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
         elif self.sampling == "KMeansSMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .KMeansSMOTE(random_state=self.random_state).fit_resample(X_train, y_train)
+                .KMeansSMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
 
         # Fit preprocessor and transform training set
         if self.preprocessor:
