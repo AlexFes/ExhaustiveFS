@@ -329,16 +329,16 @@ class ExhaustiveClassification:
 
         if self.sampling == "SMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .SMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
+                .SMOTE(sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
         elif self.sampling == "BorderlineSMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .BorderlineSMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
+                .BorderlineSMOTE(sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
         elif self.sampling == "SVMSMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .SVMSMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
+                .SVMSMOTE(sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
         elif self.sampling == "KMeansSMOTE":
             X_train, y_train = imblearn.over_sampling\
-                .KMeansSMOTE(random_state=self.random_state, sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
+                .KMeansSMOTE(sampling_strategy=self.sampling_strategy).fit_resample(X_train, y_train)
 
         # Fit preprocessor and transform training set
         if self.preprocessor:
@@ -430,6 +430,43 @@ class ExhaustiveClassification:
                 filtration_passed = False
         
         return scores, filtration_passed
+
+    def append_scores(self, scores1, scores2):
+        result_scores = {}
+
+        for dataset in scores1:
+            result_scores[dataset] = {}
+            for s in scores1[dataset]:
+                if isinstance(scores1[dataset][s], list):
+                    result_scores[dataset][s] = scores1[dataset][s] + [scores2[dataset][s]]
+                else:
+                    result_scores[dataset][s] = [scores1[dataset][s]] + [scores2[dataset][s]]
+
+        return result_scores
+
+    def agg_scores(self, all_scores, num_runs):
+        for dataset in all_scores:
+            all_scores[dataset]["MIN"] = min(all_scores[dataset]["min_TPR_TNR"])
+            all_scores[dataset]["MAX"] = max(all_scores[dataset]["min_TPR_TNR"])
+            all_scores[dataset]["MEDIAN"] = np.median(all_scores[dataset]["min_TPR_TNR"])
+            all_scores[dataset]["MEAN"] = np.mean(all_scores[dataset]["min_TPR_TNR"])
+
+        max_score, max_ind = 0, 0
+
+        for i in range(num_runs):
+            min_score = 1
+            for dataset in all_scores:
+                if all_scores[dataset]["min_TPR_TNR"][i] < min_score:
+                    min_score = all_scores[dataset]["min_TPR_TNR"][i]
+
+            if min_score > max_score:
+                max_ind = i
+                max_score = min_score
+
+        all_scores["GSE1456"]["WINNER"] = []
+
+        for dataset in all_scores:
+            all_scores["GSE1456"]["WINNER"].append(all_scores[dataset]["min_TPR_TNR"][max_ind])
 
     def estimate_run_n_k_time(self, n, k, time):
         """Estimate run time of the pipeline for classifiers 
