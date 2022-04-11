@@ -242,12 +242,12 @@ class ExhaustiveClassification:
         spent_time = end_time - start_time
         
         if self.verbose:
-            main_info = f"Pipeline iteration finished in {spent_time} seconds for n={n}, k={k}"
-            tail_infos = [f"n_processes = {self.n_processes}"]
+            main_info = "Pipeline iteration finished in {} seconds for n={}, k={}".format(spent_time, n, k)
+            tail_infos = ["n_processes = {}".format(self.n_processes)]
             if self.limit_feature_subsets:
-                tail_infos.append(f"n_feature_subsets = {self.n_feature_subsets}")
+                tail_infos.append("n_feature_subsets = {}".format(self.n_feature_subsets))
             tail_info = ", ".join(tail_infos)
-            print(f"{main_info} ({tail_info})")
+            print("{} ({})".format(main_info, tail_info))
         
         # Merge results
         df_n_k_results = pd.concat(process_results, axis=0)
@@ -356,8 +356,13 @@ class ExhaustiveClassification:
         best_ind = np.argmax(mean_test_scorings[self.main_scoring_function])
         best_params = {param: all_params[best_ind][param] for param in all_params[best_ind]}
 
+        def merge_two_dicts(x, y):
+            z = x.copy()
+            z.update(y)
+            return z
+
         # Refit classifier with best parameters
-        classifier = self.classifier(**self.classifier_kwargs, **best_params)
+        classifier = self.classifier(**merge_two_dicts(self.classifier_kwargs, best_params))
         classifier.fit(X_train, y_train)
 
         return classifier, best_params, preprocessor
