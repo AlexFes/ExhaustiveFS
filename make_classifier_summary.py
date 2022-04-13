@@ -39,8 +39,21 @@ if __name__ == "__main__":
 
     # Fit classifier
     model = initialize_classification_model(config, df, ann, None)
-    classifier, best_params, preprocessor = model.fit_classifier(config["features_subset"])
-    scores, _ = model.evaluate_classifier(classifier, preprocessor, config["features_subset"])
+
+    classifier, best_params, preprocessor, scores, all_scores = {}, {}, {}, {}, {}
+    NUM_RUNS = 20
+
+    for i in range(NUM_RUNS):
+        if i == 0:
+            classifier, best_params, preprocessor = model.fit_classifier(config["features_subset"])
+            scores, _ = model.evaluate_classifier(classifier, preprocessor, config["features_subset"])
+            all_scores = scores
+        else:
+            new_classifier, _, new_preprocessor = model.fit_classifier(config["features_subset"])
+            new_scores, _ = model.evaluate_classifier(new_classifier, new_preprocessor, config["features_subset"])
+            all_scores = model.append_scores(all_scores, new_scores)
+
+    model.agg_scores(all_scores, NUM_RUNS)
 
     # 1. Short summary on classifiers accuracy on datasets
     config_dirname = os.path.dirname(config_path)
@@ -60,9 +73,12 @@ if __name__ == "__main__":
     for i, dataset in enumerate(scores):
         dataset_type = ann.loc[ann["Dataset"] == dataset].loc[:, "Dataset type"].values[0].lower()
         report.append("{} ({} set)".format(dataset, dataset_type))
-        for metr, val in scores[dataset].items():
-            report.append("\t{:12s}: {:.4f}".format(metr, val))
-            
+        for metr, val in all_scores[dataset].items():
+            if isinstance(val, list):
+                report.append("\t{:12s}: {}".format(metr, ["%.2f" % member for member in val]))
+            else:
+                report.append("\t{:12s}: {}".format(metr, "%.2f" % val))
+
             # Plot ROC curve
             if metr == "ROC_AUC":
                 X = df.loc[ann["Dataset"] == dataset, config["features_subset"]].to_numpy()

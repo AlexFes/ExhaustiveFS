@@ -109,5 +109,7 @@ def initialize_classification_model(config, df, ann, n_k):
         config["main_scoring_function"], config.get("main_scoring_threshold", 0.5),
         n_processes=config.get("n_processes", 1),
         random_state=config["random_state"],
-        verbose=config.get("verbose", True)
+        verbose=config.get("verbose", True),
+        sampling=config.get("sampling", None),
+        sampling_strategy=config.get("sampling_strategy", 1)
     )
