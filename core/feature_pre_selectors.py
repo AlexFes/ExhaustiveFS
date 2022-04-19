@@ -38,6 +38,6 @@ def from_file(df, ann, path_to_file, sep=None):
     """
 
     with open(path_to_file, "r") as f:
-        features_from_file = [line.split(sep)[0] for line in f]
+        features_from_file = [list(map(str.strip, line.split(sep))) for line in f]
 
-    return [feature for feature in features_from_file if feature in df.columns]
+    return features_from_file

@@ -183,10 +183,11 @@ class ExhaustiveClassification:
         # Iterate over n, k pairs
         all_result_dfs = []
         for n, k in zip(self.n_k["n"], self.n_k["k"]):
-            df_n_k_results, _   = self.exhaustive_run_n_k(n, k, pre_selected_features)
-            df_n_k_results["n"] = n
-            df_n_k_results["k"] = k
-            all_result_dfs.append(df_n_k_results)
+            for feature_subset in pre_selected_features:
+                df_n_k_results, _ = self.exhaustive_run_n_k(n, k, feature_subset)
+                df_n_k_results["n"] = n
+                df_n_k_results["k"] = k
+                all_result_dfs.append(df_n_k_results)
 
         res = pd.concat(all_result_dfs, axis=0)
         res.index.name = "features"
