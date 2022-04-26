@@ -184,9 +184,10 @@ class ExhaustiveClassification:
         all_result_dfs = []
         for n, k in zip(self.n_k["n"], self.n_k["k"]):
             for feature_subset in pre_selected_features:
-                df_n_k_results, _ = self.exhaustive_run_n_k(n, k, feature_subset)
+                df_n_k_results, spent_time = self.exhaustive_run_n_k(n, k, feature_subset)
                 df_n_k_results["n"] = n
                 df_n_k_results["k"] = k
+                df_n_k_results["spent_time"] = spent_time
                 all_result_dfs.append(df_n_k_results)
 
         res = pd.concat(all_result_dfs, axis=0)

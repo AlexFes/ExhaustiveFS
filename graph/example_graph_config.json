@@ -1,5 +1,7 @@
 {
   "network_path": "",
   "data_path": "",
-  "annotation_path": ""
+  "annotation_path": "",
+  "build_graph": false,
+  "n_processes": 8
 }
