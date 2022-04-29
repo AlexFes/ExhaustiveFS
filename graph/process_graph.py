@@ -55,22 +55,24 @@ if __name__ == "__main__":
     G, df, ann, config = read_graph(config_path)
 
     if config["build_graph"]:
-        datasets = np.unique(ann.loc[ann["Dataset type"] != "Validation", "Dataset"])
-        samples = ann.loc[ann["Dataset"].isin(datasets)].index
-        data_subset = df.loc[samples]
+        # datasets = np.unique(ann.loc[ann["Dataset type"] != "Validation", "Dataset"])
+        # samples = ann.loc[ann["Dataset"].isin(datasets)].index
+        # data_subset = df.loc[samples]
+        #
+        # feature_pairs = list(combinations(df.columns, 2))
+        # pairs_count = len(feature_pairs)
+        # batch_size = pairs_count / config["n_processes"]
+        # pairs_batch = []
+        # for i in range(config["n_processes"]):
+        #     if i < config["n_processes"] - 1:
+        #         #pairs_batch.append(feature_pairs[i * batch_size:(i + 1) * batch_size])
+        #         print((i * batch_size,(i + 1) * batch_size))
+        #     else:
+        #         #pairs_batch.append(feature_pairs[i * batch_size:(i + 1) * batch_size + pairs_count % config["n_processes"]])
+        #         print((i * batch_size, (i + 1) * batch_size + pairs_count % config["n_processes"]))
 
-        feature_pairs = list(combinations(df.columns, 2))
-        pairs_count = len(feature_pairs)
-        batch_size = pairs_count / config["n_processes"]
-        pairs_batch = []
-        for i in range(config["n_processes"]):
-            if i < config["n_processes"] - 1:
-                #pairs_batch.append(feature_pairs[i * batch_size:(i + 1) * batch_size])
-                print((i * batch_size,(i + 1) * batch_size))
-            else:
-                #pairs_batch.append(feature_pairs[i * batch_size:(i + 1) * batch_size + pairs_count % config["n_processes"]])
-                print((i * batch_size, (i + 1) * batch_size + pairs_count % config["n_processes"]))
 
+        from random import seed, shuffle
 
         # correlations_array = []
         # for i in range(pairs_count):
@@ -92,8 +94,8 @@ if __name__ == "__main__":
 
         # print([len(get_knet(largest_weak_component, k)) for k in range(8)])
 
-        top_in_degree = sorted(G.in_degree(), key=lambda x: x[1], reverse=True)[:25]
-        top_out_degree = sorted(G.out_degree(), key=lambda x: x[1], reverse=True)[:25]
+        top_in_degree = sorted(G.in_degree(), key=lambda x: x[1], reverse=True)[:15]
+        top_out_degree = sorted(G.out_degree(), key=lambda x: x[1], reverse=True)[:15]
 
         with open("features.csv", "w") as f:
             write = csv.writer(f)

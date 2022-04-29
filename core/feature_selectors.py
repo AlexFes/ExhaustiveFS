@@ -13,7 +13,7 @@ def feature_selector(df, ann, n, **kwargs):
 
 
 import numpy as np
-
+from random import seed, shuffle
 from scipy.stats import spearmanr, ttest_ind
 
 
@@ -131,3 +131,32 @@ def from_file(df, ann, n, path_to_file, sep=None):
         features_from_file = [line.split(sep)[0] for line in f]
     
     return [feature for feature in features_from_file if feature in df.columns][:n]
+
+
+def random(df, ann, n, random_state):
+    """Select n random features
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A pandas DataFrame whose rows represent samples
+        and columns represent features.
+    ann : pandas.DataFrame
+        DataFrame with annotation of samples. This argument is
+        actually not used by the function.
+    n : int
+        Number of features to select.
+    random_state : int
+        Seed
+
+    Returns
+    -------
+    list
+        List of first n random features
+    """
+
+    seed(random_state)
+    features = list(df.columns)
+    shuffle(features)
+
+    return features[:n]

@@ -165,7 +165,7 @@ class ExhaustiveClassification:
                 **self.feature_pre_selector_kwargs
             )
         else:
-            return self.df.columns.to_list()
+            return [self.df.columns.to_list()]
 
     def exhaustive_run(self):
         """Run the pipeline for classifier construction 
