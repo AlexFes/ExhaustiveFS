@@ -3,5 +3,6 @@
   "data_path": "",
   "annotation_path": "",
   "build_graph": false,
-  "n_processes": 8
+  "correlation_threshold": 0.5,
+  "p_value_threshold": 0.05
 }

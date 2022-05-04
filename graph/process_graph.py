@@ -5,9 +5,10 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import csv
-from multiprocessing import Pool
-from scipy.stats import spearmanr, pearsonr
+from scipy.stats import spearmanr
 from itertools import combinations
+import statsmodels.api as sm
+
 
 def get_knet(G, k):
     adj_matrix = nx.to_numpy_array(G.to_undirected())
@@ -23,7 +24,7 @@ def get_knet(G, k):
     return nx.algorithms.approximation.min_weighted_dominating_set(derived_graph)
 
 
-def read_graph(config_path):
+def read_data(config_path):
     try:
         config_file = open(config_path, "r")
     except:
@@ -40,49 +41,47 @@ def read_graph(config_path):
     df = pd.read_csv(os.path.join(config_dirname, config["data_path"]).replace("\\", "/"), index_col=0)
     ann = pd.read_csv(os.path.join(config_dirname, config["annotation_path"]).replace("\\", "/"), index_col=0)
 
+    return df, ann, config
+
+
+def read_graph(config_path):
     try:
         G = nx.read_graphml(config["network_path"])
     except:
         print("Please provide a valid graphml file", file=sys.stderr)
         sys.exit(1)
 
-    return G, df, ann, config
-
+    return G
 
 if __name__ == "__main__":
     config_path = "graph_config.json"
 
-    G, df, ann, config = read_graph(config_path)
+    df, ann, config = read_data(config_path)
 
     if config["build_graph"]:
-        # datasets = np.unique(ann.loc[ann["Dataset type"] != "Validation", "Dataset"])
-        # samples = ann.loc[ann["Dataset"].isin(datasets)].index
-        # data_subset = df.loc[samples]
-        #
-        # feature_pairs = list(combinations(df.columns, 2))
-        # pairs_count = len(feature_pairs)
-        # batch_size = pairs_count / config["n_processes"]
-        # pairs_batch = []
-        # for i in range(config["n_processes"]):
-        #     if i < config["n_processes"] - 1:
-        #         #pairs_batch.append(feature_pairs[i * batch_size:(i + 1) * batch_size])
-        #         print((i * batch_size,(i + 1) * batch_size))
-        #     else:
-        #         #pairs_batch.append(feature_pairs[i * batch_size:(i + 1) * batch_size + pairs_count % config["n_processes"]])
-        #         print((i * batch_size, (i + 1) * batch_size + pairs_count % config["n_processes"]))
+        datasets = np.unique(ann.loc[ann["Dataset type"] != "Validation", "Dataset"])
+        samples = ann.loc[ann["Dataset"].isin(datasets)].index
+        data_subset = df.loc[samples]
 
+        pairs = list(combinations(df.columns, 2))
+        pairs_count = len(pairs)
+        correlations_array = []
+        count = 0
 
-        from random import seed, shuffle
+        for pair in pairs:
+            correlations_array.append(spearmanr(data_subset[pair[0]], data_subset[pair[1]]))
+            count += 1
+            if count % 1e6 == 0:
+                print("Done {} out of {}\n".format(count, pairs_count))
 
-        # correlations_array = []
-        # for i in range(pairs_count):
-        #     current = spearmanr(df[feature_pairs[i][0]], df[feature_pairs[i][1]])
-        #     correlations_array.append(current)
-        #     if i % 10000 == 0:
-        #         print("Done {} out of {}\n".format(i, pairs_count))
-        #         print(current)
+        reject, p_vals, _, _ = sm.stats.multipletests(pvals=[p_val for _, p_val in correlations_array], alpha=0.05, method='fdr_bh')
+
+        edges = [edge for edge, corr, reject, p_val_corrected in zip(pairs, correlations_array, reject, p_vals) if abs(corr[0]) >= config["correlation_threshold"] and reject and p_val_corrected <= config["p_value_threshold"]]
+        G = nx.from_edgelist(edges)
+        nx.write_graphml(G, "correlation_graph.graphml")
 
     else:
+        G = read_graph(config_path)
         nodes_to_remove = [node for node in G.nodes if not node in set(df.columns)]
         G.remove_nodes_from(nodes_to_remove)
 
